@@ -20,7 +20,7 @@ pub const ROW_HEIGHT: f32 = 18.0;
 
 #[composable]
 pub fn MarketsApp() {
-    let market = rememberHandle(Market::default);
+    let market = rememberHandle(|| Market::new(super::initial_venue()));
     Feeds(market);
     let size = rememberMutableStateOf(|| Size::new(0.0, 0.0));
     Box(

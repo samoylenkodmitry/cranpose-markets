@@ -121,10 +121,11 @@ pub struct Market {
     updates: Cell<u32>,
 }
 
-impl Default for Market {
-    fn default() -> Self {
+impl Market {
+    /// A market that starts on `venue`.
+    pub fn new(venue: Venue) -> Self {
         Self {
-            venue: mutableStateOf(Venue::Binance),
+            venue: mutableStateOf(venue),
             symbol: mutableStateOf(String::from("BTCUSDT")),
             interval: mutableStateOf(Interval::M1),
             decimals: mutableStateOf(2),
@@ -139,9 +140,7 @@ impl Default for Market {
             updates: Cell::new(0),
         }
     }
-}
 
-impl Market {
     /// Shows `pairs` in the watchlist. When the selected symbol is not among
     /// them, the most traded pair takes its place.
     pub fn set_pairs(&self, pairs: Vec<Pair>) {

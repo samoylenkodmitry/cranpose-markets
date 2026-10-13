@@ -27,7 +27,8 @@ The app reads Binance's public market data. It needs no account or API key.
 Binance serves its market data from `data-api.binance.vision` and
 `data-stream.binance.vision`. Binance refuses visitors from some regions,
 including the United States. When it refuses the pair list or the stream, the
-app moves to Binance.US, which speaks the same protocol.
+app moves to Binance.US, which speaks the same protocol. Add `?venue=us` to the
+URL to start on Binance.US.
 
 ## How the screen updates
 

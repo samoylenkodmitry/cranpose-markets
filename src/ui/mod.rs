@@ -11,6 +11,8 @@ mod watchlist;
 
 pub use app::MarketsApp;
 
+use crate::market::Venue;
+
 /// The browser's offset from UTC in minutes, for the times the app shows.
 #[cfg(all(feature = "web", target_arch = "wasm32"))]
 fn local_offset_minutes() -> i64 {
@@ -21,4 +23,18 @@ fn local_offset_minutes() -> i64 {
 #[cfg(not(all(feature = "web", target_arch = "wasm32")))]
 fn local_offset_minutes() -> i64 {
     0
+}
+
+/// The venue the page asks for with `?venue=us`, else Binance.
+#[cfg(all(feature = "web", target_arch = "wasm32"))]
+fn initial_venue() -> Venue {
+    let search = web_sys::window()
+        .and_then(|window| window.location().search().ok())
+        .unwrap_or_default();
+    Venue::from_query(&search)
+}
+
+#[cfg(not(all(feature = "web", target_arch = "wasm32")))]
+fn initial_venue() -> Venue {
+    Venue::Binance
 }

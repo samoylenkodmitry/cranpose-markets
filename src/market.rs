@@ -44,6 +44,15 @@ impl Venue {
         }
     }
 
+    /// The venue a page query string names: `venue=us` picks Binance.US.
+    pub fn from_query(query: &str) -> Self {
+        let us = query
+            .trim_start_matches('?')
+            .split('&')
+            .any(|pair| pair.eq_ignore_ascii_case("venue=us"));
+        if us { Self::BinanceUs } else { Self::Binance }
+    }
+
     /// The venue to try when this one refuses the visitor.
     pub fn fallback(self) -> Option<Self> {
         match self {
@@ -298,8 +307,8 @@ impl Pair {
 
 /// Base assets pegged to a currency: their pairs barely move, so the
 /// watchlist leaves them out.
-const PEGGED_BASES: [&str; 9] = [
-    "USDC", "FDUSD", "TUSD", "USDP", "DAI", "EUR", "USD1", "BUSD", "AEUR",
+const PEGGED_BASES: [&str; 10] = [
+    "USDC", "USDT", "FDUSD", "TUSD", "USDP", "DAI", "EUR", "USD1", "BUSD", "AEUR",
 ];
 
 /// Picks the venue's pairs from its 24 hour tickers, most traded first. A
@@ -319,8 +328,15 @@ pub fn watchlist_pairs(venue: Venue, tickers: impl IntoIterator<Item = Pair>) ->
     pairs
 }
 
+/// Quote assets whose names end in a venue quote: `ZILBUSD` is ZIL in BUSD,
+/// not ZILB in USD.
+const LOOKALIKE_QUOTES: [&str; 4] = ["BUSD", "TUSD", "FDUSD", "PYUSD"];
+
 /// Splits `symbol` into base and quote with the venue's quote assets.
 pub fn base_len(venue: Venue, symbol: &str) -> Option<usize> {
+    if LOOKALIKE_QUOTES.iter().any(|quote| symbol.ends_with(quote)) {
+        return None;
+    }
     venue
         .quote_assets()
         .iter()

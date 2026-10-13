@@ -70,7 +70,9 @@ fn tickers_keep_the_venues_active_pairs_most_traded_first() {
         {"symbol":"USDCUSDT","lastPrice":"1","openPrice":"1","highPrice":"1","lowPrice":"1","quoteVolume":"99999"},
         {"symbol":"OLDUSDT","lastPrice":"1","openPrice":"1","highPrice":"1","lowPrice":"1","quoteVolume":"0"},
         {"symbol":"ETHBTC","lastPrice":"0.1","openPrice":"0.1","highPrice":"0.1","lowPrice":"0.1","quoteVolume":"10"},
-        {"symbol":"BTCUSD","lastPrice":"100","openPrice":"90","highPrice":"110","lowPrice":"80","quoteVolume":"700"}
+        {"symbol":"BTCUSD","lastPrice":"100","openPrice":"90","highPrice":"110","lowPrice":"80","quoteVolume":"700"},
+        {"symbol":"ZILBUSD","lastPrice":"1","openPrice":"1","highPrice":"1","lowPrice":"1","quoteVolume":"800"},
+        {"symbol":"USDTUSD","lastPrice":"1","openPrice":"1","highPrice":"1","lowPrice":"1","quoteVolume":"900"}
     ]"#;
     let symbols = |venue| {
         parse_tickers(venue, body)
@@ -96,4 +98,12 @@ fn rest_candles_read_oldest_first() {
     assert_eq!(candles.len(), 2);
     assert_eq!(candles[1].open_time_ms, 120_000);
     assert_eq!(candles[1].close, 3.0);
+}
+
+#[test]
+fn only_venue_us_in_the_query_picks_binance_us() {
+    assert_eq!(Venue::from_query("?venue=us"), Venue::BinanceUs);
+    assert_eq!(Venue::from_query("?backend=gl&venue=US"), Venue::BinanceUs);
+    assert_eq!(Venue::from_query("?venue=usa"), Venue::Binance);
+    assert_eq!(Venue::from_query(""), Venue::Binance);
 }

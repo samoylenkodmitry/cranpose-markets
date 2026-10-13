@@ -51,6 +51,7 @@ wasm-logger = { version = "0.2", optional = true }
 web-sys = { version = "0.3", optional = true, features = [
     "CloseEvent",
     "Event",
+    "Location",
     "MessageEvent",
     "WebSocket",
     "Window",
