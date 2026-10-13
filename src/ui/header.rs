@@ -33,7 +33,27 @@ pub fn StatusLine(market: Handle<Market>) {
                 Modifier::empty(),
                 theme::style(12.0, MUTED),
             );
+            SourceLink();
         },
+    );
+}
+
+const SOURCE_URL: &str = "https://github.com/samoylenkodmitry/cranpose-markets";
+
+/// Opens the app's source code.
+#[composable]
+fn SourceLink() {
+    let uri = local_uri_handler().current();
+    Text(
+        "Source",
+        Modifier::empty()
+            .clickable(move |_| {
+                if let Err(error) = uri.open_uri(SOURCE_URL) {
+                    log::warn!("cannot open {SOURCE_URL}: {error}");
+                }
+            })
+            .padding_horizontal(4.0),
+        theme::style(12.0, theme::ACCENT),
     );
 }
 
