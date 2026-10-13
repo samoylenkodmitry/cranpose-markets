@@ -3,7 +3,7 @@ use cranpose_coroflow::Handle;
 
 use super::theme::{self, FAINT, MUTED, TEXT};
 use crate::format;
-use crate::market::Quote;
+use crate::market::{Quote, base_len};
 use crate::store::{Link, Market};
 
 /// The feed's state and the rate of market data it applies.
@@ -50,7 +50,11 @@ pub fn PairHeader(market: Handle<Market>, wide: bool) {
                     row.pair.quote_asset().to_owned(),
                     Some(row.quote.handle()),
                 ),
-                None => (symbol.clone(), String::new(), None),
+                None => {
+                    let split = base_len(state.venue.get(), symbol).unwrap_or(symbol.len());
+                    let (base, quote_asset) = symbol.split_at(split);
+                    (base.to_owned(), quote_asset.to_owned(), None)
+                }
             })
     });
     Row(
