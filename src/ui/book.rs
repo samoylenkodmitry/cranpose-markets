@@ -1,4 +1,5 @@
 use cranpose::prelude::*;
+use cranpose::text::SharedText;
 use cranpose_coroflow::Handle;
 
 use super::app::ROW_HEIGHT;
@@ -123,14 +124,14 @@ fn Spread(market: Handle<Market>, decimals: usize) {
     let ask = state.asks.levels[0].get().price;
     let text = if bid > 0.0 && ask > 0.0 {
         let spread = ask - bid;
-        format!(
+        SharedText::from(format!(
             "{}  spread {} ({:.3}%)",
             format::grouped((ask + bid) / 2.0, decimals),
             format::grouped(spread, decimals),
             spread / ask * 100.0
-        )
+        ))
     } else {
-        String::from("Waiting for the book")
+        SharedText::from("Waiting for the book")
     };
     Row(
         Modifier::empty()

@@ -1,3 +1,4 @@
+use std::rc::Rc;
 use std::time::Duration;
 
 use cranpose::prelude::*;
@@ -36,7 +37,7 @@ pub fn Watchlist(market: Handle<Market>) {
                         let row = market.get().watchlist.read(|watchlist| {
                             watchlist.rows.get(index).map(|row| {
                                 (
-                                    row.pair.symbol.clone(),
+                                    Rc::clone(&row.pair.symbol),
                                     row.pair.base_len,
                                     row.quote.handle(),
                                 )
@@ -53,10 +54,10 @@ pub fn Watchlist(market: Handle<Market>) {
 }
 
 #[composable]
-fn WatchRow(market: Handle<Market>, symbol: String, base_len: usize, quote: MutableState<Quote>) {
+fn WatchRow(market: Handle<Market>, symbol: Rc<str>, base_len: usize, quote: MutableState<Quote>) {
     let selected = market.get().symbol.with(|current| *current == symbol);
-    let Quote { last, .. } = quote.get();
-    let change = quote.get().change_percent();
+    let current = quote.get();
+    let (last, change) = (current.last, current.change_percent());
     let flash = PriceFlash(last);
     let decimals = format::price_decimals(last);
     Row(
@@ -83,8 +84,8 @@ fn WatchRow(market: Handle<Market>, symbol: String, base_len: usize, quote: Muta
                 }
             })
             .clickable({
-                let symbol = symbol.clone();
-                move |_| market.get().select(symbol.clone())
+                let symbol = Rc::clone(&symbol);
+                move |_| market.get().select(Rc::clone(&symbol))
             })
             .padding_horizontal(12.0),
         RowSpec::default().vertical_alignment(VerticalAlignment::CenterVertically),
@@ -93,7 +94,7 @@ fn WatchRow(market: Handle<Market>, symbol: String, base_len: usize, quote: Muta
                 Modifier::empty().weight(1.0),
                 RowSpec::default().vertical_alignment(VerticalAlignment::CenterVertically),
                 {
-                    let symbol = symbol.clone();
+                    let symbol = Rc::clone(&symbol);
                     move || {
                         let (base, quote_asset) = symbol.split_at(base_len);
                         Text(base.to_owned(), Modifier::empty(), theme::bold(13.0, TEXT));

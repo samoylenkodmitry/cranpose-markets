@@ -114,7 +114,7 @@ mod streams {
     /// The all-pair ticker stream and the selected pair's book, trade and
     /// candle streams.
     #[composable]
-    pub fn Streams(market: Handle<Market>, venue: Venue, symbol: String, interval: Interval) {
+    pub fn Streams(market: Handle<Market>, venue: Venue, symbol: Rc<str>, interval: Interval) {
         DisposableEffect(venue, move |_| {
             let socket = open(market, venue, ALL_TICKERS_STREAM);
             DisposableEffectResult::new(move || drop(socket))

@@ -2,6 +2,7 @@
 //! Nothing here touches the UI, so tests drive it directly.
 
 use std::collections::VecDeque;
+use std::rc::Rc;
 
 /// Where the data comes from. Binance serves most of the world; it refuses
 /// visitors from the United States, who get Binance.US, which speaks the same
@@ -289,7 +290,7 @@ pub fn fill_levels(levels: &mut Vec<Level>, pairs: impl IntoIterator<Item = (f64
 /// A pair as the watchlist lists it.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Pair {
-    pub symbol: String,
+    pub symbol: Rc<str>,
     /// Where the base asset ends in `symbol`; the quote asset follows.
     pub base_len: usize,
     pub quote: Quote,

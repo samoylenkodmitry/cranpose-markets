@@ -1,6 +1,8 @@
 //! Reads Binance's JSON: combined stream messages and REST responses. Prices
 //! and quantities arrive as decimal strings.
 
+use std::rc::Rc;
+
 use serde::Deserialize;
 use serde_json::value::RawValue;
 
@@ -219,7 +221,7 @@ pub fn parse_tickers(venue: Venue, body: &str) -> Result<Vec<Pair>, serde_json::
         venue,
         tickers.into_iter().filter_map(|t| {
             Some(Pair {
-                symbol: t.symbol.to_owned(),
+                symbol: Rc::from(t.symbol),
                 base_len: base_len(venue, t.symbol)?,
                 quote: quote(
                     t.last_price,

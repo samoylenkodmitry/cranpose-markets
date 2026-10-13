@@ -4,6 +4,7 @@
 
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
+use std::rc::Rc;
 
 use cranpose_core::{MutableState, OwnedMutableState, mutableStateOf, ownedMutableStateOf};
 
@@ -52,7 +53,7 @@ pub struct WatchRow {
 #[derive(Default)]
 pub struct Watchlist {
     pub rows: Vec<WatchRow>,
-    index: HashMap<String, usize>,
+    index: HashMap<Rc<str>, usize>,
 }
 
 impl Watchlist {
@@ -103,7 +104,7 @@ pub enum Link {
 
 pub struct Market {
     pub venue: MutableState<Venue>,
-    pub symbol: MutableState<String>,
+    pub symbol: MutableState<Rc<str>>,
     pub interval: MutableState<Interval>,
     /// The decimals the selected pair's prices show.
     pub decimals: MutableState<usize>,
@@ -126,7 +127,7 @@ impl Market {
     pub fn new(venue: Venue) -> Self {
         Self {
             venue: mutableStateOf(venue),
-            symbol: mutableStateOf(String::from("BTCUSDT")),
+            symbol: mutableStateOf(Rc::from("BTCUSDT")),
             interval: mutableStateOf(Interval::M1),
             decimals: mutableStateOf(2),
             link: mutableStateOf(Link::Connecting),
@@ -148,7 +149,7 @@ impl Market {
             watchlist.index = pairs
                 .iter()
                 .enumerate()
-                .map(|(index, pair)| (pair.symbol.clone(), index))
+                .map(|(index, pair)| (Rc::clone(&pair.symbol), index))
                 .collect();
             watchlist.rows = pairs
                 .into_iter()
@@ -161,7 +162,12 @@ impl Market {
         let fallback = self.watchlist.read(|watchlist| {
             let selected = self.symbol.with(|symbol| watchlist.row(symbol).is_some());
             (!selected)
-                .then(|| watchlist.rows.first().map(|row| row.pair.symbol.clone()))
+                .then(|| {
+                    watchlist
+                        .rows
+                        .first()
+                        .map(|row| Rc::clone(&row.pair.symbol))
+                })
                 .flatten()
         });
         if let Some(symbol) = fallback {
@@ -170,7 +176,7 @@ impl Market {
         self.refresh_decimals();
     }
 
-    pub fn select(&self, symbol: String) {
+    pub fn select(&self, symbol: Rc<str>) {
         if self.symbol.with(|current| *current != symbol) {
             self.clear_pair();
             self.symbol.set(symbol);

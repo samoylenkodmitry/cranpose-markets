@@ -1,4 +1,5 @@
 use cranpose::prelude::*;
+use cranpose::text::SharedText;
 use cranpose_coroflow::Handle;
 
 use super::theme::{self, FAINT, MUTED, TEXT};
@@ -14,9 +15,9 @@ pub fn StatusLine(market: Handle<Market>) {
     let venue = state.venue.get();
     let rate = state.updates_per_second.get();
     let (color, label) = match link {
-        Link::Connecting => (FAINT, format!("Connecting to {}", venue.name())),
-        Link::Live => (theme::UP, format!("Live from {}", venue.name())),
-        Link::Unavailable => (theme::DOWN, String::from("No venue answered")),
+        Link::Connecting => (FAINT, format!("Connecting to {}", venue.name()).into()),
+        Link::Live => (theme::UP, format!("Live from {}", venue.name()).into()),
+        Link::Unavailable => (theme::DOWN, SharedText::from("No venue answered")),
     };
     Row(
         Modifier::empty().height(24.0).padding_horizontal(12.0),
@@ -66,14 +67,18 @@ pub fn PairHeader(market: Handle<Market>, wide: bool) {
             .watchlist
             .read(|watchlist| match watchlist.row(symbol) {
                 Some(row) => (
-                    row.pair.base().to_owned(),
-                    row.pair.quote_asset().to_owned(),
+                    SharedText::from(row.pair.base().to_owned()),
+                    SharedText::from(format!("/ {}", row.pair.quote_asset())),
                     Some(row.quote.handle()),
                 ),
                 None => {
                     let split = base_len(state.venue.get(), symbol).unwrap_or(symbol.len());
                     let (base, quote_asset) = symbol.split_at(split);
-                    (base.to_owned(), quote_asset.to_owned(), None)
+                    (
+                        SharedText::from(base.to_owned()),
+                        SharedText::from(format!("/ {quote_asset}")),
+                        None,
+                    )
                 }
             })
     });
@@ -86,17 +91,14 @@ pub fn PairHeader(market: Handle<Market>, wide: bool) {
             .vertical_alignment(VerticalAlignment::CenterVertically)
             .horizontal_arrangement(LinearArrangement::SpacedBy(if wide { 28.0 } else { 16.0 })),
         move || {
-            Column(Modifier::empty(), ColumnSpec::default(), {
-                let base = base.clone();
-                let quote_asset = quote_asset.clone();
-                move || {
-                    Text(base.clone(), Modifier::empty(), theme::bold(18.0, TEXT));
-                    Text(
-                        format!("/ {quote_asset}"),
-                        Modifier::empty(),
-                        theme::style(12.0, MUTED),
-                    );
-                }
+            let (base, quote_asset) = (base.clone(), quote_asset.clone());
+            Column(Modifier::empty(), ColumnSpec::default(), move || {
+                Text(base.clone(), Modifier::empty(), theme::bold(18.0, TEXT));
+                Text(
+                    quote_asset.clone(),
+                    Modifier::empty(),
+                    theme::style(12.0, MUTED),
+                );
             });
             LastPrice(market, quote);
             if let Some(quote) = quote {
@@ -129,20 +131,25 @@ fn LastPrice(market: Handle<Market>, quote: Option<MutableState<Quote>>) {
 fn Statistics(quote: Quote, wide: bool) {
     let change = quote.change_percent();
     let decimals = format::price_decimals(quote.last);
-    Stat(
-        "24h change",
-        format::percent(change),
-        theme::trend(change >= 0.0),
-    );
+    let trend = theme::trend(change >= 0.0);
+    Stat("24h change", format::percent(change).into(), trend);
     if wide {
-        Stat("24h high", format::grouped(quote.high, decimals), TEXT);
-        Stat("24h low", format::grouped(quote.low, decimals), TEXT);
-        Stat("24h volume", format::compact(quote.quote_volume), TEXT);
+        Stat(
+            "24h high",
+            format::grouped(quote.high, decimals).into(),
+            TEXT,
+        );
+        Stat("24h low", format::grouped(quote.low, decimals).into(), TEXT);
+        Stat(
+            "24h volume",
+            format::compact(quote.quote_volume).into(),
+            TEXT,
+        );
     }
 }
 
 #[composable]
-fn Stat(label: &'static str, value: String, color: Color) {
+fn Stat(label: &'static str, value: SharedText, color: Color) {
     Column(Modifier::empty(), ColumnSpec::default(), move || {
         Text(label, Modifier::empty(), theme::style(11.0, MUTED));
         Text(value.clone(), Modifier::empty(), theme::style(13.0, color));
