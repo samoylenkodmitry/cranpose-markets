@@ -1,0 +1,61 @@
+[package]
+name = "cranpose-markets"
+version = "0.1.0"
+edition = "2024"
+description = "Live crypto market data in the browser, drawn with Cranpose"
+license = "Apache-2.0"
+repository = "https://github.com/samoylenkodmitry/cranpose-markets"
+publish = false
+
+# `-ocimfs=100` keeps wasm-opt from folding each function that has a single
+# caller into that caller, whatever its size. A page compiles a function whole
+# at its first call, so those folds made large functions whose unused branches
+# a first visit compiled (Cranpose#1408).
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ["-O3", "-ocimfs=100", "--all-features"]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = []
+web = [
+    "cranpose/web",
+    "cranpose/renderer-wgpu",
+    "dep:wasm-bindgen",
+    "dep:wasm-bindgen-futures",
+    "dep:web-sys",
+    "dep:js-sys",
+    "dep:console_error_panic_hook",
+    "dep:wasm-logger",
+]
+
+[dependencies]
+cranpose = "0.9.33"
+cranpose-animation = "0.9.33"
+cranpose-core = "0.9.33"
+cranpose-coroflow = "0.9.33"
+cranpose-ui-graphics = "0.9.33"
+log = "0.4"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["raw_value"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+cranpose-services = { version = "0.9.33", default-features = false, features = ["web-http"] }
+console_error_panic_hook = { version = "0.1", optional = true }
+getrandom = { version = "0.4.3", features = ["wasm_js"] }
+js-sys = { version = "0.3", optional = true }
+wasm-bindgen = { version = "0.2", optional = true }
+wasm-bindgen-futures = { version = "0.4", optional = true }
+wasm-logger = { version = "0.2", optional = true }
+web-sys = { version = "0.3", optional = true, features = [
+    "CloseEvent",
+    "Event",
+    "MessageEvent",
+    "WebSocket",
+    "Window",
+] }
+
+[profile.release]
+lto = true
+codegen-units = 1

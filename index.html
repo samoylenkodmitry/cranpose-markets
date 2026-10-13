@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="description" content="Live crypto market data in the browser: order book, trades and candles from the Binance public feed, drawn with the Cranpose UI framework in Rust and WebAssembly." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Crect x='1' y='7' width='4' height='9' fill='%23f6465d'/%3E%3Crect x='7' y='3' width='4' height='12' fill='%230ecb81'/%3E%3Crect x='13' y='5' width='4' height='8' fill='%230ecb81'/%3E%3C/svg%3E" />
+  <title>Cranpose Markets</title>
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #0b0e14;
+      overscroll-behavior: none;
+    }
+
+    canvas {
+      display: block;
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      outline: none;
+    }
+
+    /* Shown while the WebAssembly bundle downloads, and the message if it
+       never starts. The app removes it once it owns the canvas. */
+    #boot {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      text-align: center;
+      padding: 24px;
+      background: #0b0e14;
+      color: #e6e9ef;
+      font: 400 0.9rem/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    #boot .spinner {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 3px solid rgba(230, 233, 239, 0.18);
+      border-top-color: #8e7cff;
+      animation: spin 0.9s linear infinite;
+    }
+
+    #boot .detail {
+      max-width: 320px;
+      color: #848e9e;
+    }
+
+    #boot.error .detail {
+      color: #f6465d;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="markets-canvas"></canvas>
+  <div id="boot">
+    <div class="spinner"></div>
+    <div class="detail">Loading Cranpose Markets&hellip;</div>
+  </div>
+
+  <script type="module">
+    const boot = document.getElementById("boot");
+
+    function fail(message) {
+      boot.classList.add("error");
+      boot.querySelector(".spinner").remove();
+      boot.querySelector(".detail").textContent = message;
+    }
+
+    async function main() {
+      const hasWebGpu = typeof navigator !== "undefined" && "gpu" in navigator;
+      const hasWebGl2 = !!document.createElement("canvas").getContext("webgl2");
+      if (!hasWebGpu && !hasWebGl2) {
+        throw new Error("Neither WebGPU nor WebGL2 is available in this browser.");
+      }
+
+      const wasm = await import("./pkg/cranpose_markets.js");
+      await wasm.default();
+      await wasm.run_app();
+      boot.remove();
+    }
+
+    main().catch((error) => {
+      console.error(error);
+      fail(String(error && error.message ? error.message : error));
+    });
+  </script>
+</body>
+</html>
