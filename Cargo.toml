@@ -31,17 +31,17 @@ web = [
 ]
 
 [dependencies]
-cranpose = "0.9.33"
-cranpose-animation = "0.9.33"
-cranpose-core = "0.9.33"
-cranpose-coroflow = "0.9.33"
-cranpose-ui-graphics = "0.9.33"
+cranpose = "0.9.35"
+cranpose-animation = "0.9.35"
+cranpose-core = "0.9.35"
+cranpose-coroflow = "0.9.35"
+cranpose-ui-graphics = "0.9.35"
 log = "0.4"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["raw_value"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-cranpose-services = { version = "0.9.33", default-features = false, features = ["web-http"] }
+cranpose-services = { version = "0.9.35", default-features = false, features = ["web-http"] }
 console_error_panic_hook = { version = "0.1", optional = true }
 getrandom = { version = "0.4.3", features = ["wasm_js"] }
 js-sys = { version = "0.3", optional = true }
