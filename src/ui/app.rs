@@ -32,7 +32,7 @@ pub fn MarketsApp() {
         move || {
             let Size { width, height } = size.get();
             if width >= WIDE_MIN_WIDTH {
-                WideLayout(market, height);
+                WideLayout(market);
             } else {
                 NarrowLayout(market, height);
             }
@@ -40,15 +40,17 @@ pub fn MarketsApp() {
     );
 }
 
-/// How many levels of each book side fit in `height`.
+/// How many levels of each book side fit in `height` under the column
+/// titles and beside the spread row.
 fn book_rows(height: f32) -> usize {
-    let fixed = 3.0 * 24.0;
-    (((height - fixed) / ROW_HEIGHT / 2.0).floor() as usize).clamp(4, crate::store::BOOK_DEPTH)
+    let fixed = 24.0 + 26.0;
+    (((height - fixed) / ROW_HEIGHT / 2.0).floor().max(0.0) as usize)
+        .clamp(4, crate::store::BOOK_DEPTH)
 }
 
 #[composable]
-fn WideLayout(market: Handle<Market>, height: f32) {
-    let body_height = height - TOP_BAR_HEIGHT;
+fn WideLayout(market: Handle<Market>) {
+    let side = rememberMutableStateOf(|| Size::new(0.0, 0.0));
     Column(
         Modifier::empty().fill_max_size(),
         ColumnSpec::default(),
@@ -74,13 +76,17 @@ fn WideLayout(market: Handle<Market>, height: f32) {
                         },
                     );
                     Panel(
-                        Modifier::empty().width(BOOK_WIDTH).fill_max_height(),
+                        Modifier::empty()
+                            .width(BOOK_WIDTH)
+                            .fill_max_height()
+                            .report_size_state(side),
                         move || {
+                            let rows = book_rows(side.get().height * 0.6);
                             Column(
                                 Modifier::empty().fill_max_size(),
                                 ColumnSpec::default(),
                                 move || {
-                                    OrderBook(market, book_rows(body_height * 0.62));
+                                    OrderBook(market, rows);
                                     Divider();
                                     TradeTape(
                                         market,
@@ -118,6 +124,7 @@ impl Tab {
 #[composable]
 fn NarrowLayout(market: Handle<Market>, height: f32) {
     let tab = rememberMutableStateOf(|| Tab::Book);
+    let area = rememberMutableStateOf(|| Size::new(0.0, 0.0));
     let chart_height = (height * 0.4).clamp(220.0, 420.0);
     Column(
         Modifier::empty().fill_max_size(),
@@ -138,15 +145,15 @@ fn NarrowLayout(market: Handle<Market>, height: f32) {
                 Modifier::empty().fill_max_width().height(chart_height),
             );
             Tabs(tab);
-            let rest = height - chart_height - 34.0 - 24.0 - 64.0 - 36.0 - 36.0;
             Box(
                 Modifier::empty()
                     .fill_max_width()
                     .weight(1.0)
-                    .background(PANEL),
+                    .background(PANEL)
+                    .report_size_state(area),
                 BoxSpec::default(),
                 move || match tab.get() {
-                    Tab::Book => OrderBook(market, book_rows(rest)),
+                    Tab::Book => OrderBook(market, book_rows(area.get().height)),
                     Tab::Trades => TradeTape(market, Modifier::empty().fill_max_size()),
                     Tab::Markets => Watchlist(market),
                 },

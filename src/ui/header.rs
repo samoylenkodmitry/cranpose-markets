@@ -74,7 +74,7 @@ pub fn PairHeader(market: Handle<Market>, wide: bool) {
                     );
                 }
             });
-            LastPrice(market);
+            LastPrice(market, quote);
             if let Some(quote) = quote {
                 Statistics(quote.get(), wide);
             }
@@ -82,19 +82,21 @@ pub fn PairHeader(market: Handle<Market>, wide: bool) {
     );
 }
 
-/// The price of the newest trade, colored by its side.
+/// The price of the newest trade, colored by its side. Before the first
+/// trade arrives, the ticker's last price.
 #[composable]
-fn LastPrice(market: Handle<Market>) {
+fn LastPrice(market: Handle<Market>, quote: Option<MutableState<Quote>>) {
     let state = market.get();
+    let decimals = state.decimals.get();
     let newest = state
         .tape
         .read(|tape| tape.newest().map(|trade| (trade.price, trade.buyer_maker)));
-    let (text, color) = match newest {
-        Some((price, buyer_maker)) => (
-            format::grouped(price, format::price_decimals(price)),
-            theme::trend(!buyer_maker),
-        ),
-        None => (String::from("--"), TEXT),
+    let (text, color) = match (newest, quote) {
+        (Some((price, buyer_maker)), _) => {
+            (format::grouped(price, decimals), theme::trend(!buyer_maker))
+        }
+        (None, Some(quote)) => (format::grouped(quote.get().last, decimals), TEXT),
+        (None, None) => (String::from("--"), TEXT),
     };
     Text(text, Modifier::empty(), theme::bold(22.0, color));
 }

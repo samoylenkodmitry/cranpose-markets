@@ -107,7 +107,7 @@ pub fn PriceChart(market: Handle<Market>, modifier: Modifier) {
                                 PointerEventKind::Up | PointerEventKind::Cancel => drag = None,
                                 PointerEventKind::Exit => hover.set(None),
                                 PointerEventKind::Scroll => {
-                                    zoom(view, (-event.scroll_delta.y * 0.002).exp());
+                                    zoom(view, (event.scroll_delta.y * 0.002).exp());
                                     event.consume();
                                 }
                                 PointerEventKind::Zoom => {
