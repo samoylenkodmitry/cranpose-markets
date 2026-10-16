@@ -1,6 +1,6 @@
 [package]
 name = "cranpose-markets"
-version = "0.1.0"
+version = "0.1.2"
 edition = "2024"
 description = "Live crypto market data in the browser, drawn with Cranpose"
 license = "Apache-2.0"
@@ -31,17 +31,17 @@ web = [
 ]
 
 [dependencies]
-cranpose = "0.9.35"
-cranpose-animation = "0.9.35"
-cranpose-core = "0.9.35"
-cranpose-coroflow = "0.9.35"
-cranpose-ui-graphics = "0.9.35"
+cranpose = "0.13.0"
+cranpose-animation = "0.13.0"
+cranpose-core = "0.13.0"
+cranpose-coroflow = "0.13.0"
+cranpose-ui-graphics = "0.13.0"
 log = "0.4"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["raw_value"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-cranpose-services = { version = "0.9.35", default-features = false, features = ["web-http"] }
+cranpose-services = { version = "0.13.0", default-features = false, features = ["web-http"] }
 console_error_panic_hook = { version = "0.1", optional = true }
 getrandom = { version = "0.4.3", features = ["wasm_js"] }
 js-sys = { version = "0.3", optional = true }
