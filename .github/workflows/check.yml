@@ -57,6 +57,10 @@ jobs:
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - name: Build the web bundle
         run: ./build-web.sh
+      - name: Check the wasm features
+        # WebKit before Safari 18 rejects a module with a feature it lacks, in
+        # every iOS browser.
+        run: scripts/wasm_feature_floor.sh dist/pkg/cranpose_markets_bg.wasm
       - uses: actions/upload-artifact@v4
         with:
           name: web
